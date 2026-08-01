@@ -1,5 +1,11 @@
 const userModel = register("../models/user.model.js");
 
-const userRegisterController = async (req, res) => {
-    
+
+function userRegister(req, res){
+
+    const { email, password, name } = req.body;
+
+
 }
+
+module.exports = { userRegister }
