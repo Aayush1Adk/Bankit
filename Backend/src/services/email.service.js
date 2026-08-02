@@ -47,6 +47,12 @@ async function sendRegistrationEmail(userEmail, userName) {
     await sendEmail(userEmail, subject, text, html);
 }
 
+async function sendLoginEmail(userEmail, userName) {
+    const subject = 'Login Notification';
+    const text = `Hello ${userName},\n\nYou have successfully logged in to your Bankit account.\n\nBest regards,\nThe Bankit Team`;
+    const html = `<p>Hello ${userName},</p><p>You have successfully logged in to your <strong>Bankit</strong> account.</p><p>Best regards,<br>The Bankit Team</p>`;
 
+    await sendEmail(userEmail, subject, text, html);
+}
 
-module.exports = {sendEmail, sendRegistrationEmail};
+module.exports = {sendEmail, sendRegistrationEmail, sendLoginEmail};
