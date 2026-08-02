@@ -4,7 +4,8 @@ const accountSchema = new mongoose.Schema({
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: [true, "User is required for account creation"]
+        required: [true, "User is required for account creation"],
+        index: true // Create an index on the user field for faster queries
     },
     status:{
         enums:{
@@ -22,6 +23,8 @@ const accountSchema = new mongoose.Schema({
             timestamps: true
         }
 )
+
+accountSchema.index({user: 1, status: 1}); // Compound index on user and status for faster queries
 
 const accountModel = mongoose.model("Account", accountSchema);
 
