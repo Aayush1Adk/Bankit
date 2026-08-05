@@ -18,7 +18,7 @@ const accountSchema = new mongoose.Schema({
         currency:{
             type: String,
             required: [true, "Currency is required for account creation"],
-            default: "RS",
+            default: "Rs.",
         },
 },    
         {

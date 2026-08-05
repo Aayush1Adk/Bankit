@@ -29,12 +29,10 @@ const  ledgerSchema = new mongoose.Schema({
         required:[true, "Ledger type is required"],
         immutable:true
 
-    }
+    },
 })
 
-function preventLedgerModification(){
-    throw new Error("Ledger function are immutable and cannot be modified and delete");
-}
+
 
 ledgerSchema.pre("findOneAndUpdate", preventLedgerModification);
 ledgerSchema.pre("findOneAndDelete", preventLedgerModification);
@@ -43,7 +41,7 @@ ledgerSchema.pre("deleteOne", preventLedgerModification);
 ledgerSchema.pre("remove", preventLedgerModification);
 ledgerSchema.pre("deleteMany", preventLedgerModification);
 ledgerSchema.pre("updateMany", preventLedgerModification);
-ledgetSchema.pre("findOneAndReplace", preventLedgerModification)
+ledgerSchema.pre("findOneAndReplace", preventLedgerModification)
 
 const ledgerModel = mongoose.model("Ledger", ledgerSchema);
 
