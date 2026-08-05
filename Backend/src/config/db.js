@@ -1,16 +1,19 @@
 const mongoose = require("mongoose");
 
 
-function connectDB (){
+async function connectDB (){
 
-    mongoose.connect(process.env.MONGO_URI)
-    .then(()=>{
-        console.log("server is connected to DB")
-    })
-    .catch(err=>{
-        console.log("DATABASE's error");
-        process.exit(1) 
-    })
+    if(!process.env.MONGO_URI){
+        throw new Error("MONGO_URI is not set");
+    }
+
+    await mongoose.connect(process.env.MONGO_URI);
+
+    console.log("server is connected to DB");
+
+    mongoose.connection.on("error", error => {
+        console.error("Database connection error:", error);
+    });
 }
 
 module.exports = connectDB

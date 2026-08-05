@@ -1,6 +1,7 @@
 const userModel = require("../models/user.model.js");
 const jwt = require("jsonwebtoken");
 const emailService = require("../services/email.service.js");
+const ApiError = require("../utils/ApiError.js");
 
 
 async function userRegister(req, res){
@@ -10,9 +11,7 @@ async function userRegister(req, res){
     const ifExists = await userModel.findOne({ email: email });
 
     if(ifExists){
-        return res.status(422).json({ message: "User already exists with this email",
-            status: "failed"
-            });
+        throw new ApiError(422, "User already exists with this email");
     }
 
     const newUser = await userModel.create({
@@ -34,7 +33,9 @@ async function userRegister(req, res){
         token
     })
 
-    await emailService.sendRegistrationEmail(newUser.email, newUser.name);
+    // Notification failures must not fail an already successful registration.
+    emailService.sendRegistrationEmail(newUser.email, newUser.name)
+        .catch(error => console.error(`Failed to send registration email to ${newUser.email}:`, error));
 }
 
 
@@ -42,16 +43,20 @@ async function userLogin(req, res){
 
     const{email, password} = req.body
 
+    if(!email || !password){
+        throw new ApiError(400, "Email and password are required");
+    }
+
     const user = await userModel.findOne({email}).select("+password")
 
     if(!user){
-        return res.status(401).json({message:"Email and password is invalid"})
+        throw new ApiError(401, "Email and password is invalid");
     }
 
     const isValidPassword = await user.comparePassword(password)
 
     if(!isValidPassword){
-        return res.status(401).json({message:"Email and password is invalid"})
+        throw new ApiError(401, "Email and password is invalid");
     }
 
     const token = jwt.sign({userId:user._id},process.env.JWT_SECRET,{expiresIn:"3d"})
@@ -66,9 +71,9 @@ async function userLogin(req, res){
         token
     })
 
-    await emailService.sendLoginEmail(user.email, user.name);
-
-
+    // Notification failures must not fail an already successful login.
+    emailService.sendLoginEmail(user.email, user.name)
+        .catch(error => console.error(`Failed to send login email to ${user.email}:`, error));
 }
 
 module.exports = { userRegister, userLogin }
