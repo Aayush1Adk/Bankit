@@ -1,5 +1,5 @@
 const userModel = require('../models/user.model.js');
-const jwt = require('jsonwebtoken');
+const { verifyAuthToken } = require('../utils/auth.util.js');
 
 
 async function authMiddleware(req, res, next) {
@@ -11,7 +11,7 @@ async function authMiddleware(req, res, next) {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = verifyAuthToken(token);
 
         const user = await userModel.findById(decoded.userId);
         req.user = user; // Attach the user object to the request for further use in the route handlers
