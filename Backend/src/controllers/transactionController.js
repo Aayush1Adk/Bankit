@@ -9,7 +9,7 @@ async function createTransaction(req,res){
     if(!fromAccount || toAccount || amount || idempotencyKey){
         return res.status(422).json({message:"fromAccount, toAccount, amount and idempotencyKey are required"});
     }
-}
+
     const fromUserAccount = await accountModel.findOne({
         _id: fromAccount,
     });
@@ -49,7 +49,12 @@ async function createTransaction(req,res){
         return res.status(400).json({message:"Both accounts must be active to process transaction"});
     }
 
-    
+    const balance = await fromUserAccount.getBalance()
 
+    if(balance<amount){
+        return res.status(400).json({message: `Insufficient balance. Current balance is ${balance}. Requested amount is ${amount}`});
+    }
+    
+}
 
 
