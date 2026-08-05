@@ -32,7 +32,35 @@ accountSchema.index({user: 1, status: 1}); // Compound index on user and status 
 
 accountSchema.methods.getBalance = async function (){
     
-    const balanceData = await ledgerModel.aggregate([])
+    const balanceData = await ledgerModel.aggregate([
+        {  $match:{  account: this._id   }  },
+        {
+            $group:{
+                _id:null,
+                totalDebit: {
+                    $sum:{$cond:[{$ed: ["$type","DEBIT"]},
+                "amount",0]}
+                },
+                totalCredit:{
+                    $sum:{$cond:[{$ed: ["$type","CREDIT"]},
+                "amount",0]}
+                }
+            },
+
+        },
+        {
+            $project:{
+                _id:0,
+                balance:{$subtract:["$totalCredit","$totalDebit"]}
+            }
+        }
+    ])
+
+    if(balanceDate.length === 0){
+        return 0;
+    }
+
+    return balanceData[0].balance
 }
 
 
