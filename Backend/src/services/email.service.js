@@ -39,18 +39,35 @@ const sendEmail = async (to, subject, text, html) => {
   }
 };
 
+// Build a Bankit-branded email (plain text + html) from a greeting/body/signoff.
+function buildEmailContent(userName, bodyText, bodyHtml) {
+    const signoff = 'Best regards,\nThe Bankit Team';
+    const signoffHtml = 'Best regards,<br>The Bankit Team';
+
+    const text = `Hello ${userName},\n\n${bodyText}\n\n${signoff}`;
+    const html = `<p>Hello ${userName},</p><p>${bodyHtml}</p><p>${signoffHtml}</p>`;
+
+    return { text, html };
+}
+
 async function sendRegistrationEmail(userEmail, userName) {
     const subject = 'Welcome to Bankit!';
-    const text = `Hello ${userName},\n\nThank you for registering with Bankit! We're excited to have you on board.\n\nBest regards,\nThe Bankit Team`;
-    const html = `<p>Hello ${userName},</p><p>Thank you for registering with <strong>Bankit</strong>! We're excited to have you on board.</p><p>Best regards,<br>The Bankit Team</p>`;
+    const { text, html } = buildEmailContent(
+        userName,
+        "Thank you for registering with Bankit! We're excited to have you on board.",
+        "Thank you for registering with <strong>Bankit</strong>! We're excited to have you on board."
+    );
 
     await sendEmail(userEmail, subject, text, html);
 }
 
 async function sendLoginEmail(userEmail, userName) {
     const subject = 'Login Notification';
-    const text = `Hello ${userName},\n\nYou have successfully logged in to your Bankit account.\n\nBest regards,\nThe Bankit Team`;
-    const html = `<p>Hello ${userName},</p><p>You have successfully logged in to your <strong>Bankit</strong> account.</p><p>Best regards,<br>The Bankit Team</p>`;
+    const { text, html } = buildEmailContent(
+        userName,
+        'You have successfully logged in to your Bankit account.',
+        'You have successfully logged in to your <strong>Bankit</strong> account.'
+    );
 
     await sendEmail(userEmail, subject, text, html);
 }

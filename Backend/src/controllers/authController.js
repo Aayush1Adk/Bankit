@@ -1,6 +1,6 @@
 const userModel = require("../models/user.model.js");
-const jwt = require("jsonwebtoken");
 const emailService = require("../services/email.service.js");
+const { signAuthToken, sendAuthResponse } = require("../utils/auth.util.js");
 
 
 async function userRegister(req, res){
@@ -21,18 +21,9 @@ async function userRegister(req, res){
         name: name
     })
 
-    const token = jwt.sign({userId:newUser._id},process.env.JWT_SECRET,{expiresIn:"3d"})
+    const token = signAuthToken(newUser._id);
 
-    res.cookie("token", token)
-
-    res.status(201).json({
-        newUser:{
-            _id:newUser._id,
-            email:newUser.email,
-            name:newUser.name
-        },
-        token
-    })
+    sendAuthResponse(res, 201, newUser, token);
 
     await emailService.sendRegistrationEmail(newUser.email, newUser.name);
 }
@@ -54,17 +45,9 @@ async function userLogin(req, res){
         return res.status(401).json({message:"Email and password is invalid"})
     }
 
-    const token = jwt.sign({userId:user._id},process.env.JWT_SECRET,{expiresIn:"3d"})
-    res.cookie("token",token)
+    const token = signAuthToken(user._id);
 
-        res.status(200).json({
-        newUser:{
-            _id:user._id,
-            email:user.email,
-            name:user.name
-        },
-        token
-    })
+    sendAuthResponse(res, 200, user, token);
 
     await emailService.sendLoginEmail(user.email, user.name);
 
