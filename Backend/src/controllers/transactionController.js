@@ -2,6 +2,7 @@ const transactionModel = require("../models/transaction.model.js");
 const ledgerModel = require("../models/ledger.model.js");
 const accountModel = require("../models/account.model.js");
 const emailService = require('../services/email.service.js');
+const mongoose = require("mongoose");
 
 async function createTransaction(req,res){
     const { fromAccount, toAccount, amount, idempotencyKey } = req.body;
@@ -55,6 +56,42 @@ async function createTransaction(req,res){
         return res.status(400).json({message: `Insufficient balance. Current balance is ${balance}. Requested amount is ${amount}`});
     }
     
+
+    const session = await mongoose.startSession()
+
+    session.startTransaction() 
+    // this means that all operations in this block will be executed in a single transaction
+
+    const transaction = await transactionModel.create({
+        fromAccount,
+        toAccount,
+        amount,
+        idempotencyKey,
+        status:"PENDING"},
+        {session})
+
+        const debitLedgerEntry = await ledgerModel.create({
+            account: fromAccount,
+            amount: amount,
+            transaction: transaction._id,
+            type:"DEBIT",
+        },
+    {session})
+
+        const creditLedgerEntry = await ledgerModel.create({
+            account: toAccount,
+            amount: amount,
+            transaction: transaction._id,
+            type:"CREDIT",
+        },
+    {session})
+
+    transaction.status = "COMPLETED"
+    await transaction.save({session})
+
+    await session.commitTransaction()
+    session.endSession()
 }
+
 
 

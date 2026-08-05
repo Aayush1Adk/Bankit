@@ -32,6 +32,14 @@ accountSchema.index({user: 1, status: 1}); // Compound index on user and status 
 
 accountSchema.methods.getBalance = async function (){
     
+
+    // aggregate means we can perform multiple operations on the data
+
+    //in below query we will get totalDebit and totalCredit by grouping them using $group and then subtracting them
+
+    // inside $match this._id will be replaced by accountModel._id
+
+
     const balanceData = await ledgerModel.aggregate([
         {  $match:{  account: this._id   }  },
         {
@@ -50,7 +58,7 @@ accountSchema.methods.getBalance = async function (){
         },
         {
             $project:{
-                _id:0,
+                _id:0, // _id is 0 because we don't want to include it in the result set 
                 balance:{$subtract:["$totalCredit","$totalDebit"]}
             }
         }
