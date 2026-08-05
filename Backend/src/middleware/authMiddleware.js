@@ -14,11 +14,16 @@ async function authMiddleware(req, res, next) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         const user = await userModel.findById(decoded.userId);
+
+        if (!user) {
+            return res.status(401).json({ message: "Invalid token." });
+        }
+
         req.user = user; // Attach the user object to the request for further use in the route handlers
-        
+
         next();
     } catch (error) {
-        return res.status(400).json({ message: "Invalid token." });
+        return res.status(401).json({ message: "Invalid token." });
     }
 }
 
