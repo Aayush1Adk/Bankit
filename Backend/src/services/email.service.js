@@ -21,22 +21,20 @@ transporter.verify((error, success) => {
   }
 });
 
-// Function to send email
+// Function to send email. Rejects on failure so callers can decide how to react.
 const sendEmail = async (to, subject, text, html) => {
-  try {
-    const info = await transporter.sendMail({
-      from: `"Bankit" <${process.env.EMAIL_USER}>`, // sender address
-      to, // list of receivers
-      subject, // Subject line
-      text, // plain text body
-      html, // html body
-    });
+  const info = await transporter.sendMail({
+    from: `"Bankit" <${process.env.EMAIL_USER}>`, // sender address
+    to, // list of receivers
+    subject, // Subject line
+    text, // plain text body
+    html, // html body
+  });
 
-    console.log('Message sent: %s', info.messageId);
-    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-  } catch (error) {
-    console.error('Error sending email:', error);
-  }
+  console.log('Message sent: %s', info.messageId);
+  console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+
+  return info;
 };
 
 async function sendRegistrationEmail(userEmail, userName) {
@@ -44,7 +42,7 @@ async function sendRegistrationEmail(userEmail, userName) {
     const text = `Hello ${userName},\n\nThank you for registering with Bankit! We're excited to have you on board.\n\nBest regards,\nThe Bankit Team`;
     const html = `<p>Hello ${userName},</p><p>Thank you for registering with <strong>Bankit</strong>! We're excited to have you on board.</p><p>Best regards,<br>The Bankit Team</p>`;
 
-    await sendEmail(userEmail, subject, text, html);
+    return sendEmail(userEmail, subject, text, html);
 }
 
 async function sendLoginEmail(userEmail, userName) {
@@ -52,7 +50,7 @@ async function sendLoginEmail(userEmail, userName) {
     const text = `Hello ${userName},\n\nYou have successfully logged in to your Bankit account.\n\nBest regards,\nThe Bankit Team`;
     const html = `<p>Hello ${userName},</p><p>You have successfully logged in to your <strong>Bankit</strong> account.</p><p>Best regards,<br>The Bankit Team</p>`;
 
-    await sendEmail(userEmail, subject, text, html);
+    return sendEmail(userEmail, subject, text, html);
 }
 
 module.exports = {sendEmail, sendRegistrationEmail, sendLoginEmail};
