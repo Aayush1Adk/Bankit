@@ -55,4 +55,21 @@ async function sendLoginEmail(userEmail, userName) {
     await sendEmail(userEmail, subject, text, html);
 }
 
+
+async function sendTransactionEmail(userEmail, userName, amount, toAccount) {
+
+  const subject = 'Transaction Successful';
+  const text = `Hello ${userName},\n\nYou have successfully transferred $${amount} to ${toAccount}.\n\nBest regards,\nThe Bankit Team`;
+  const html = `<p>Hello ${userName},</p><p>You have successfully transferred $${amount} to ${toAccount}.</p><p>Best regards,<br>The Bankit Team</p>`;
+
+  await sendEmail(userEmail, subject, text, html);
+}
+
+async function sendTransactionFailureEmail(userEmail, userName, amount, toAccount) {
+  const subject = 'Transaction Failed';
+  const text = `Hello ${userName},\n\nYour transaction of $${amount} to ${toAccount} has failed.\n\nBest regards,\nThe Bankit Team`;
+  const html = `<p>Hello ${userName},</p><p>Your transaction of $${amount} to ${toAccount} has failed.</p><p>Best regards,<br>The Bankit Team</p>`;
+}
+
+
 module.exports = {sendEmail, sendRegistrationEmail, sendLoginEmail};

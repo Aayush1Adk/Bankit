@@ -56,34 +56,39 @@ async function createTransaction(req,res){
         return res.status(400).json({message: `Insufficient balance. Current balance is ${balance}. Requested amount is ${amount}`});
     }
     
-
+//Open a new database "session" (a temporary workspace window for MongoDB)
     const session = await mongoose.startSession()
 
-    session.startTransaction() 
-    // this means that all operations in this block will be executed in a single transaction
+ //Begin the transaction inside this session.
+// Everything marked with { session } after this line will be held in a draft state.
 
-    const transaction = await transactionModel.create({
+    session.startTransaction() 
+    // this means that either all write operations succeed, or none of them do, and if one of them does, the transaction is rolled back
+
+    //Create a new transaction record set to "PENDING"
+    // We wrap the object in an array [...] so Mongoose correctly attaches the { session } option.
+    const [transaction] = await transactionModel.create([{
         fromAccount,
         toAccount,
         amount,
         idempotencyKey,
-        status:"PENDING"},
-        {session})
+        status:"PENDING"} ],
+        {session}) // Tell MongoDB: "Do not save this publicly yet, keep it inside our draft session"
 
-        const debitLedgerEntry = await ledgerModel.create({
+        const debitLedgerEntry = await ledgerModel.create([{
             account: fromAccount,
             amount: amount,
-            transaction: transaction._id,
+            transaction: transaction._id,  // Link this ledger entry to the transaction record above
             type:"DEBIT",
-        },
+        }],
     {session})
 
-        const creditLedgerEntry = await ledgerModel.create({
+        const creditLedgerEntry = await ledgerModel.create([{
             account: toAccount,
             amount: amount,
             transaction: transaction._id,
             type:"CREDIT",
-        },
+        }],
     {session})
 
     transaction.status = "COMPLETED"
@@ -91,7 +96,19 @@ async function createTransaction(req,res){
 
     await session.commitTransaction()
     session.endSession()
+
+    
+    await emailService.sendTransactionEmail(req.user.email, req.user.name, amount, toAccount)
+
+    return res.status(201).json({message:"Transaction created successfully",
+        transaction: transaction 
+    });
+
+
+
 }
+
+module.exports = {createTransaction}
 
 
 
