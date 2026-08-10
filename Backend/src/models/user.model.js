@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema({
         required: [true, "Password is required For Registration"],
         minlength: [6, "Password must be at least 6 characters long"],
         select: false // This will prevent the password from being returned in queries by default
+    },
+    systemUser:{
+        type: Boolean,
+        default: false,
+        immutable: true,
+        select: false
     }
 },
 {
