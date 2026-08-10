@@ -120,6 +120,21 @@ async function createTransaction(req,res){
             return res.status(400).json({message:"Invalid to account"});
         }
 
+        const fromAccount = await accountModel.findOne({
+            systemUser: true,
+            user: req.user._id,
+        })
+
+        if(!fromAccount){
+            return res.status(400).json({message:"Invalid from account, you are not a system user"});
+        }
+
+        const session = await mongoose.startSession()
+
+        session.startTransaction()
+
+        
+
     }
 
 
