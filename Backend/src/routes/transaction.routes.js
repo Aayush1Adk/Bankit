@@ -5,5 +5,6 @@ const transactionController = require("../controllers/transactionController.js")
 const router = express.Router();
 
 router.post("/", authMiddleware.authMiddleware, transactionController.createTransaction);
+router.post("/initial-funds", authMiddleware.authSystemUserMiddleware, transactionController.createInitialFundsTransaction);
 
 module.exports = router;
