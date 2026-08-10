@@ -6,4 +6,4 @@ const router = express.Router();
 
 router.post("/", authMiddleware.authMiddleware, transactionController.createTransaction);
 
-module.exports = transactionRoutes;
+module.exports = router;
