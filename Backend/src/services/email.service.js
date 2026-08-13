@@ -35,8 +35,20 @@ const sendEmail = async (to, subject, text, html) => {
     console.log('Message sent: %s', info.messageId);
     console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error("Email sending failed:", error.message);
+
+    if (error.code === "EAUTH" || error.code === "EOAUTH2") {
+      console.error(
+        "Gmail OAuth authentication failed. The refresh token may be invalid or revoked."
+      );
+    }
+        return {
+      success: false,
+      error: error.message,
+    };
   }
+
+
 };
 
 async function sendRegistrationEmail(userEmail, userName) {

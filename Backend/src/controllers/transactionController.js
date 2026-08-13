@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 async function createTransaction(req,res){
     const { fromAccount, toAccount, amount, idempotencyKey } = req.body;
 
-    if(!fromAccount || toAccount || amount || idempotencyKey){
+    if(!fromAccount || !toAccount || !amount || !idempotencyKey){
         return res.status(422).json({message:"fromAccount, toAccount, amount and idempotencyKey are required"});
     }
 
@@ -29,19 +29,21 @@ async function createTransaction(req,res){
         idempotencyKey: idempotencyKey
     })
 
-    if(isTransactionAlreadyExists.status === "COMPLETED"){
-        return res.status(201).json({message:"Transaction already exists"});
-    }
+    if(isTransactionAlreadyExists){
+        if(isTransactionAlreadyExists.status === "COMPLETED"){
+            return res.status(201).json({message:"Transaction already exists"});
+        }
 
-    if(isTransactionAlreadyExists.status ==="PENDING"){
-        return res.status(201).json({message:"Transaction is still processing"});
-    }
+        if(isTransactionAlreadyExists.status ==="PENDING"){
+            return res.status(201).json({message:"Transaction is still processing"});
+        }
 
-    if(isTransactionAlreadyExists.status === "FAILED"){
-        return res.status(201).json({message:"Transaction failed"});
-    }
-    if(isTransactionAlreadyExists.status === "REVERSED"){
-        return res.status(201).json({message:"Transaction reversed"});
+        if(isTransactionAlreadyExists.status === "FAILED"){
+            return res.status(201).json({message:"Transaction failed"});
+        }
+        if(isTransactionAlreadyExists.status === "REVERSED"){
+            return res.status(201).json({message:"Transaction reversed"});
+        }
     }
 
 
@@ -103,13 +105,13 @@ async function createTransaction(req,res){
     return res.status(201).json({message:"Transaction created successfully!",
         transaction: transaction 
     });
-
+}
     async function createInitialFundsTransaction(req, res){
 
         const { toAccount, Amount, idempotencyKey} = req.body;
 
-        if(!toAccount || Amount || idempotencyKey){
-            return res.status(422).json({message:"toAccount, Amount and idempotencyKey are required"});
+        if(!toAccount || !Amount || !idempotencyKey){
+            return res.status(422).json({message:"toAccount, amount and idempotencyKey are required"});
         }
 
         const toAccountUser = await accountModel.findOne({
@@ -121,7 +123,6 @@ async function createTransaction(req,res){
         }
 
         const fromAccount = await accountModel.findOne({
-            systemUser: true,
             user: req.user._id,
         })
 
@@ -133,12 +134,45 @@ async function createTransaction(req,res){
 
         session.startTransaction()
 
-        
+        const [transaction] = await transactionModel.create([{
+            fromAccount: fromAccount._id,
+            toAccount,
+            amount,
+            idempotencyKey,
+            status:"PENDING",
+        }], {session})
+
+        const debitLedgerEntry = await ledgerModel.create([{
+            account: fromAccount._id,
+            amount: amount,
+            transaction:transaction._id,
+            type:"DEBIT",
+        }],
+    {session})
+
+        const creditLedgerEntry = await ledgerModel.create([{
+            account: toAccount,
+            amount: amount,
+            transaction: transaction._id,
+            type:"CREDIT",
+        }],  
+        {session})
+
+        transaction.status = "COMPLETED";
+        await transaction.save({session});
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(201).json({message:"Transaction created successfully!",
+        transaction: transaction 
+        });
 
     }
 
 
-}
+
+
 
 module.exports = {createTransaction, createInitialFundsTransaction}
 
