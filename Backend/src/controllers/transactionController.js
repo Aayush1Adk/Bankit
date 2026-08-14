@@ -108,9 +108,9 @@ async function createTransaction(req,res){
 }
     async function createInitialFundsTransaction(req, res){
 
-        const { toAccount, Amount, idempotencyKey} = req.body;
+        const { toAccount, amount, idempotencyKey} = req.body;
 
-        if(!toAccount || !Amount || !idempotencyKey){
+        if(!toAccount || !amount || !idempotencyKey){
             return res.status(422).json({message:"toAccount, amount and idempotencyKey are required"});
         }
 

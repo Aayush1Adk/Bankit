@@ -54,7 +54,7 @@ async function userLogin(req, res){
         return res.status(401).json({message:"Email and password is invalid"})
     }
 
-    const token = jwt.sign({userId:user._id},process.env.JWT_SECRET,{expiresIn:"3d"})
+    const token = jwt.sign({userId:user._id, email:user.email},process.env.JWT_SECRET,{expiresIn:"3d"})
     res.cookie("token",token)
 
         res.status(200).json({

@@ -10,7 +10,7 @@ const accountSchema = new mongoose.Schema({
     },
     status:{
         type: String,
-        enums:{
+        enum:{
             values: ["active", "frozen", "closed"],
             message: `Status must be either 'active', 'frozen', or 'closed'`,
             }, 
@@ -46,12 +46,12 @@ accountSchema.methods.getBalance = async function (){
             $group:{
                 _id:null,
                 totalDebit: {
-                    $sum:{$cond:[{$ed: ["$type","DEBIT"]},
-                "amount",0]}
+                    $sum:{$cond:[{$eq: ["$type","DEBIT"]},
+                "$amount",0]}
                 },
                 totalCredit:{
-                    $sum:{$cond:[{$ed: ["$type","CREDIT"]},
-                "amount",0]}
+                    $sum:{$cond:[{$eq: ["$type","CREDIT"]},
+                "$amount",0]}
                 }
             },
 
@@ -64,7 +64,7 @@ accountSchema.methods.getBalance = async function (){
         }
     ])
 
-    if(balanceDate.length === 0){
+    if(balanceData.length === 0){
         return 0;
     }
 
