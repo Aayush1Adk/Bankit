@@ -84,4 +84,4 @@ async function sendTransactionFailureEmail(userEmail, userName, amount, toAccoun
 }
 
 
-module.exports = {sendEmail, sendRegistrationEmail, sendLoginEmail};
+module.exports = {sendEmail, sendRegistrationEmail, sendLoginEmail, sendTransactionEmail, sendTransactionFailureEmail};

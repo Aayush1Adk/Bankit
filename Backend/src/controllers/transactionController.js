@@ -31,7 +31,8 @@ async function createTransaction(req,res){
 
     if(isTransactionAlreadyExists){
         if(isTransactionAlreadyExists.status === "COMPLETED"){
-            return res.status(201).json({message:"Transaction already exists"});
+            return res.status(201).json({message: "Transaction already processed",
+                transaction: isTransactionAlreadyExists});
         }
 
         if(isTransactionAlreadyExists.status ==="PENDING"){
@@ -57,6 +58,8 @@ async function createTransaction(req,res){
     if(balance<amount){
         return res.status(400).json({message: `Insufficient balance. Current balance is ${balance}. Requested amount is ${amount}`});
     }
+
+    try{
     
 //Open a new database "session" (a temporary workspace window for MongoDB)
     const session = await mongoose.startSession()
@@ -69,7 +72,7 @@ async function createTransaction(req,res){
 
     //Create a new transaction record set to "PENDING"
     // We wrap the object in an array [...] so Mongoose correctly attaches the { session } option.
-    const [transaction] = await transactionModel.create([{
+    const transaction = await transactionModel.create([{
         fromAccount,
         toAccount,
         amount,
@@ -93,12 +96,15 @@ async function createTransaction(req,res){
         }],
     {session})
 
-    transaction.status = "COMPLETED"
-    await transaction.save({session})
+    await transactionModel.findOneAndUpdate(
+        {_id: transaction._id}, {status:"COMPLETED"},{session})
 
     await session.commitTransaction()
     session.endSession()
-
+    }
+    catch(err){
+        return res.status(400).json({message:"Transaction is pending due to some issue, please try again later"});
+    } 
     
     await emailService.sendTransactionEmail(req.user.email, req.user.name, amount, toAccount)
 
@@ -134,13 +140,13 @@ async function createTransaction(req,res){
 
         session.startTransaction()
 
-        const [transaction] = await transactionModel.create([{
+        const transaction = new transactionModel({
             fromAccount: fromAccount._id,
             toAccount,
             amount,
             idempotencyKey,
             status:"PENDING",
-        }], {session})
+        })
 
         const debitLedgerEntry = await ledgerModel.create([{
             account: fromAccount._id,
